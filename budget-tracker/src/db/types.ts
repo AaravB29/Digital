@@ -45,6 +45,8 @@ export interface Expense {
   templateId?: string;
   /** True when the user changed a generated fixed amount for this month. */
   isOverridden?: boolean;
+  /** Fixed rows only: whether this month's payment has been made. */
+  isPaid?: boolean;
   createdAt: string;
 }
 

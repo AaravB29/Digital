@@ -4,9 +4,12 @@ import type { Expense, Income } from '../db/types';
 import { useMonth } from '../hooks/useMonth';
 import { useMoneyFormat, useMonthData } from '../hooks/useExpenses';
 import { useUndoToast } from '../hooks/useUndoToast';
+import { useFixedExpenses } from '../hooks/useFixedExpenses';
+import { splitFixedRows } from '../lib/fixed';
 import { currentMonthKey } from '../lib/months';
 import { monthSummary } from '../lib/stats';
 import ExpenseList from '../components/ExpenseList';
+import FixedExpenseSection from '../components/FixedExpenseSection';
 import IncomePanel from '../components/IncomePanel';
 import MonthHeader from '../components/MonthHeader';
 import QuickAdd from '../components/QuickAdd';
@@ -18,10 +21,12 @@ export default function MonthPage() {
   const { expenses, incomes, categories, loading } = useMonthData(isValid ? month : currentMonthKey());
   const moneyFormat = useMoneyFormat();
   const { toast, show, dismiss } = useUndoToast();
+  const templates = useFixedExpenses(isValid ? month : null);
 
   if (!isValid) return <Navigate to={`/month/${currentMonthKey()}`} replace />;
 
   const activeCategories = categories.filter((c) => !c.archived);
+  const { fixed, variable } = splitFixedRows(expenses);
   const defaultCategoryId = activeCategories.find((c) => !c.isFixed)?.id;
 
   async function handleDeleteExpense(expense: Expense) {
@@ -47,13 +52,14 @@ export default function MonthPage() {
             defaultCategoryId={defaultCategoryId}
             onAdd={async (input) => void (await addExpense(input))}
           />
+          {!loading && <FixedExpenseSection rows={fixed} templates={templates} moneyFormat={moneyFormat} />}
           <section aria-label="Expenses">
-            <h2 className="mb-2 font-semibold">Expenses</h2>
+            <h2 className="mb-2 font-semibold">Other expenses</h2>
             {loading ? (
               <p className="text-slate-500">Loading…</p>
             ) : (
               <ExpenseList
-                expenses={expenses}
+                expenses={variable}
                 categories={categories}
                 moneyFormat={moneyFormat}
                 onUpdate={updateExpense}
