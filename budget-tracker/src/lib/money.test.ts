@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney, parseMoney } from './money';
+import { formatMoney, formatMoneyForInput, parseMoney } from './money';
 
 describe('parseMoney', () => {
   it.each([
@@ -63,5 +63,17 @@ describe('formatMoney', () => {
 
   it('refuses non-integer input', () => {
     expect(() => formatMoney(12.5)).toThrow();
+  });
+});
+
+describe('formatMoneyForInput', () => {
+  it('produces plain text that parses back to the same cents', () => {
+    expect(formatMoneyForInput(1250)).toBe('12,50');
+    expect(formatMoneyForInput(123456)).toBe('1234,56');
+    expect(formatMoneyForInput(5, 'en-US')).toBe('0.05');
+    for (const cents of [0, 1, 10, 99, 1250, 123456, 99999999]) {
+      expect(parseMoney(formatMoneyForInput(cents))).toBe(cents);
+      expect(parseMoney(formatMoneyForInput(cents, 'en-US'))).toBe(cents);
+    }
   });
 });

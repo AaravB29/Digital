@@ -70,3 +70,13 @@ export function formatMoney(cents: number, format: MoneyFormat = DEFAULT_MONEY_F
   }
   return nf.format(cents / 100);
 }
+
+/** Cents → plain editable text without currency or grouping, e.g. 1250 → "12,50" (de-DE). */
+export function formatMoneyForInput(cents: number, locale: string = DEFAULT_MONEY_FORMAT.locale): string {
+  if (!Number.isInteger(cents)) throw new Error(`Money must be integer cents, got ${cents}`);
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  }).format(cents / 100);
+}

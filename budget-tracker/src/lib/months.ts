@@ -1,4 +1,4 @@
-import { addMonths as addMonthsToDate, format, isValid, parse } from 'date-fns';
+import { addDays, addMonths as addMonthsToDate, format, isValid, parse } from 'date-fns';
 import type { MonthKey } from '../db/types';
 
 const MONTH_KEY_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -65,4 +65,26 @@ export function monthOfIsoDate(isoDate: string): MonthKey {
   const key = isoDate.slice(0, 7);
   assertMonthKey(key);
   return key;
+}
+
+/** True if `key` is after the month containing `now` (used for the "planned" badge). */
+export function isFutureMonth(key: MonthKey, now: Date = new Date()): boolean {
+  return compareMonths(key, currentMonthKey(now)) > 0;
+}
+
+/** First and last ISO dates of a month, e.g. "2026-02" → ["2026-02-01", "2026-02-28"]. */
+export function monthDateBounds(key: MonthKey): [string, string] {
+  const first = monthKeyToDate(key);
+  const last = addDays(addMonthsToDate(first, 1), -1);
+  return [format(first, 'yyyy-MM-dd'), format(last, 'yyyy-MM-dd')];
+}
+
+/** Default date for a new expense: today when viewing the current month, else the 1st. */
+export function defaultExpenseDate(key: MonthKey, now: Date = new Date()): string {
+  return key === currentMonthKey(now) ? format(now, 'yyyy-MM-dd') : monthDateBounds(key)[0];
+}
+
+/** True if the ISO date falls inside the month. */
+export function isDateInMonth(isoDate: string, key: MonthKey): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(isoDate) && isoDate.slice(0, 7) === key;
 }

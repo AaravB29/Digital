@@ -3,6 +3,10 @@ import {
   addMonths,
   compareMonths,
   currentMonthKey,
+  defaultExpenseDate,
+  isDateInMonth,
+  isFutureMonth,
+  monthDateBounds,
   formatMonthLabel,
   isMonthKey,
   monthKeyToDate,
@@ -69,5 +73,35 @@ describe('formatMonthLabel', () => {
   it('shows the full month name and year', () => {
     expect(formatMonthLabel('2026-11')).toBe('November 2026');
     expect(formatMonthLabel('2027-01')).toBe('January 2027');
+  });
+});
+
+describe('month entry helpers', () => {
+  const now = new Date(2026, 10, 10, 15, 30);
+
+  it('flags months after the current one as future', () => {
+    expect(isFutureMonth('2026-12', now)).toBe(true);
+    expect(isFutureMonth('2027-01', now)).toBe(true);
+    expect(isFutureMonth('2026-11', now)).toBe(false);
+    expect(isFutureMonth('2026-10', now)).toBe(false);
+  });
+
+  it('gives first and last day of a month, including leap years', () => {
+    expect(monthDateBounds('2026-11')).toEqual(['2026-11-01', '2026-11-30']);
+    expect(monthDateBounds('2026-12')).toEqual(['2026-12-01', '2026-12-31']);
+    expect(monthDateBounds('2027-02')).toEqual(['2027-02-01', '2027-02-28']);
+    expect(monthDateBounds('2028-02')).toEqual(['2028-02-01', '2028-02-29']);
+  });
+
+  it('defaults new expense dates to today in the current month, else the 1st', () => {
+    expect(defaultExpenseDate('2026-11', now)).toBe('2026-11-10');
+    expect(defaultExpenseDate('2026-10', now)).toBe('2026-10-01');
+    expect(defaultExpenseDate('2027-03', now)).toBe('2027-03-01');
+  });
+
+  it('checks whether a date belongs to a month', () => {
+    expect(isDateInMonth('2026-11-30', '2026-11')).toBe(true);
+    expect(isDateInMonth('2026-12-01', '2026-11')).toBe(false);
+    expect(isDateInMonth('', '2026-11')).toBe(false);
   });
 });
