@@ -1,13 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { format } from 'date-fns';
+import { currentMonthKey } from './lib/months';
 import Layout from './components/Layout';
 import MonthPage from './pages/MonthPage';
 import TrendsPage from './pages/TrendsPage';
 import SettingsPage from './pages/SettingsPage';
-
-function currentMonthKey(): string {
-  return format(new Date(), 'yyyy-MM');
-}
 
 export default function App() {
   return (
