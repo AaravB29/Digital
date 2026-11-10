@@ -16,7 +16,7 @@ function linkClass({ isActive }: { isActive: boolean }): string {
 
 export default function Layout() {
   return (
-    <div className="min-h-screen md:flex">
+    <div className="min-h-screen md:flex bg-slate-50 text-slate-900">
       {/* Sidebar on desktop, bottom bar on mobile */}
       <nav
         aria-label="Main"
