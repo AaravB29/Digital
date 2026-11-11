@@ -1,15 +1,16 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { addExpense, addIncome, deleteExpense, deleteIncome, restoreExpense, restoreIncome, updateExpense } from '../db/actions';
 import type { Expense, Income } from '../db/types';
 import { useMonth } from '../hooks/useMonth';
 import { useMoneyFormat, useMonthData } from '../hooks/useExpenses';
 import { useUndoToast } from '../hooks/useUndoToast';
 import { useFixedExpenses } from '../hooks/useFixedExpenses';
-import { splitFixedRows } from '../lib/fixed';
+import { selectableCategories, tabCategories } from '../lib/categories';
 import { currentMonthKey } from '../lib/months';
-import { monthSummary } from '../lib/stats';
-import ExpenseList from '../components/ExpenseList';
-import FixedExpenseSection from '../components/FixedExpenseSection';
+import { monthSummary, totalsByCategory } from '../lib/stats';
+import AllExpensesView from '../components/AllExpensesView';
+import CategoryTabs, { ALL_TAB } from '../components/CategoryTabs';
+import CategoryView from '../components/CategoryView';
 import IncomePanel from '../components/IncomePanel';
 import MonthHeader from '../components/MonthHeader';
 import QuickAdd from '../components/QuickAdd';
@@ -18,6 +19,7 @@ import UndoToast from '../components/UndoToast';
 
 export default function MonthPage() {
   const { month, isValid, goTo } = useMonth();
+  const [params, setParams] = useSearchParams();
   const { expenses, incomes, categories, loading } = useMonthData(isValid ? month : currentMonthKey());
   const moneyFormat = useMoneyFormat();
   const { toast, show, dismiss } = useUndoToast();
@@ -25,9 +27,15 @@ export default function MonthPage() {
 
   if (!isValid) return <Navigate to={`/month/${currentMonthKey()}`} replace />;
 
-  const activeCategories = categories.filter((c) => !c.archived);
-  const { fixed, variable } = splitFixedRows(expenses);
-  const defaultCategoryId = activeCategories.find((c) => !c.isFixed)?.id;
+  const summary = monthSummary(expenses, incomes);
+  const totals = totalsByCategory(expenses);
+  const tabs = tabCategories(categories, totals);
+  const requested = params.get('tab') ?? ALL_TAB;
+  const activeCategory = tabs.find((c) => c.id === requested);
+  const activeTab = activeCategory ? activeCategory.id : ALL_TAB;
+  const selectable = selectableCategories(categories);
+  const defaultCategoryId =
+    activeCategory && !activeCategory.archived ? activeCategory.id : selectable.find((c) => !c.isFixed)?.id;
 
   async function handleDeleteExpense(expense: Expense) {
     const removed = await deleteExpense(expense);
@@ -39,34 +47,39 @@ export default function MonthPage() {
     show(`Deleted income "${removed.source}"`, () => void restoreIncome(removed));
   }
 
+  const listProps = { categories, templates, moneyFormat, onUpdate: updateExpense, onDelete: handleDeleteExpense };
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-5">
       <MonthHeader month={month} onChange={goTo} />
-      <SummaryBar summary={monthSummary(expenses, incomes)} format={moneyFormat} />
+      <SummaryBar summary={summary} format={moneyFormat} />
+      <CategoryTabs
+        categories={tabs}
+        totals={totals}
+        monthTotal={summary.spent}
+        active={activeTab}
+        moneyFormat={moneyFormat}
+        onSelect={(tab) => setParams(tab === ALL_TAB ? {} : { tab }, { replace: true })}
+      />
       <div className="grid gap-5 md:grid-cols-[1fr_20rem]">
         <div className="flex min-w-0 flex-col gap-5">
           <QuickAdd
             month={month}
-            categories={activeCategories}
+            categories={selectable}
             locale={moneyFormat.locale}
             defaultCategoryId={defaultCategoryId}
+            resetKey={activeTab}
             onAdd={async (input) => void (await addExpense(input))}
           />
-          {!loading && <FixedExpenseSection rows={fixed} templates={templates} moneyFormat={moneyFormat} />}
-          <section aria-label="Expenses">
-            <h2 className="mb-2 font-semibold">Other expenses</h2>
+          <div role="tabpanel" aria-label={activeCategory?.name ?? 'All expenses'}>
             {loading ? (
               <p className="text-slate-500">Loading…</p>
+            ) : activeCategory ? (
+              <CategoryView category={activeCategory} expenses={expenses.filter((e) => e.categoryId === activeCategory.id)} total={totals.get(activeCategory.id) ?? 0} {...listProps} />
             ) : (
-              <ExpenseList
-                expenses={variable}
-                categories={categories}
-                moneyFormat={moneyFormat}
-                onUpdate={updateExpense}
-                onDelete={handleDeleteExpense}
-              />
+              <AllExpensesView expenses={expenses} {...listProps} />
             )}
-          </section>
+          </div>
         </div>
         <IncomePanel
           incomes={incomes}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { monthSummary, totalForMonth, totalIncome } from './stats';
+import { monthSummary, totalForMonth, totalIncome, totalsByCategory } from './stats';
 
 const amounts = (...cents: number[]) => cents.map((amount) => ({ amount }));
 
@@ -32,5 +32,19 @@ describe('monthSummary', () => {
     expect(monthSummary(amounts(500), [])).toEqual({
       income: 0, spent: 500, remaining: -500, percentSpent: null,
     });
+  });
+});
+
+describe('totalsByCategory', () => {
+  it('sums per category and adds up to the month total', () => {
+    const rows = [
+      { amount: 1250, categoryId: 'groceries' },
+      { amount: 320, categoryId: 'transport' },
+      { amount: 999, categoryId: 'groceries' },
+      { amount: 65000, categoryId: 'fixed' },
+    ];
+    const totals = totalsByCategory(rows);
+    expect(Object.fromEntries(totals)).toEqual({ groceries: 2249, transport: 320, fixed: 65000 });
+    expect([...totals.values()].reduce((a, b) => a + b, 0)).toBe(totalForMonth(rows));
   });
 });

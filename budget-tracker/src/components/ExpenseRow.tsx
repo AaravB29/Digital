@@ -4,6 +4,7 @@ import type { Category, Expense } from '../db/types';
 import type { ExpenseInput } from '../db/actions';
 import { formatMoney, type MoneyFormat } from '../lib/money';
 import ExpenseForm from './ExpenseForm';
+import { selectableCategories } from '../lib/categories';
 
 interface Props {
   expense: Expense;
@@ -24,7 +25,7 @@ export default function ExpenseRow({ expense, category, categories, moneyFormat,
       <li className="bg-teal-50/60 px-4 py-4">
         <ExpenseForm
           month={expense.month}
-          categories={categories}
+          categories={selectableCategories(categories, expense.categoryId)}
           locale={moneyFormat.locale}
           initial={expense}
           autoFocus

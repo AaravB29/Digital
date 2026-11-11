@@ -8,11 +8,13 @@ interface Props {
   categories: Category[];
   locale: string;
   defaultCategoryId?: string;
+  /** Changing this resets the form, e.g. when another tab is opened. */
+  resetKey?: string;
   onAdd: (input: ExpenseInput) => Promise<void>;
 }
 
 /** Always-visible card on desktop; a floating "+" that opens a bottom sheet on mobile. */
-export default function QuickAdd({ month, categories, locale, defaultCategoryId, onAdd }: Props) {
+export default function QuickAdd({ month, categories, locale, defaultCategoryId, resetKey, onAdd }: Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
@@ -24,7 +26,7 @@ export default function QuickAdd({ month, categories, locale, defaultCategoryId,
 
   const form = (autoFocus: boolean, afterAdd?: () => void) => (
     <ExpenseForm
-      key={month}
+      key={`${month}:${resetKey ?? ''}:${defaultCategoryId ?? ''}`}
       month={month}
       categories={categories}
       locale={locale}

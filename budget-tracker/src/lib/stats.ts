@@ -32,3 +32,10 @@ export function monthSummary(
     percentSpent: income > 0 ? Math.round((spent * 100) / income) : null,
   };
 }
+
+/** Cents spent per category id. Categories without expenses are absent. */
+export function totalsByCategory(expenses: Pick<Expense, 'amount' | 'categoryId'>[]): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const e of expenses) totals.set(e.categoryId, (totals.get(e.categoryId) ?? 0) + e.amount);
+  return totals;
+}
