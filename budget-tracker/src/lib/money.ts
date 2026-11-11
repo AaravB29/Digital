@@ -80,3 +80,13 @@ export function formatMoneyForInput(cents: number, locale: string = DEFAULT_MONE
     useGrouping: false,
   }).format(cents / 100);
 }
+
+/** Whole-unit amount for chart axes, e.g. 65000 → "650 €". Rounded, so display only. */
+export function formatMoneyShort(cents: number, format: MoneyFormat = DEFAULT_MONEY_FORMAT): string {
+  return new Intl.NumberFormat(format.locale, {
+    style: 'currency',
+    currency: format.currency,
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }).format(Math.round(cents / 100));
+}

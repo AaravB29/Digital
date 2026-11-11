@@ -88,3 +88,21 @@ export function defaultExpenseDate(key: MonthKey, now: Date = new Date()): strin
 export function isDateInMonth(isoDate: string, key: MonthKey): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(isoDate) && isoDate.slice(0, 7) === key;
 }
+
+export type RangePreset = 'last3' | 'last6' | 'last12' | 'thisYear';
+
+/** Inclusive month range ending in the current month. */
+export function presetRange(preset: RangePreset, now: Date = new Date()): [MonthKey, MonthKey] {
+  const to = currentMonthKey(now);
+  switch (preset) {
+    case 'last3': return [addMonths(to, -2), to];
+    case 'last6': return [addMonths(to, -5), to];
+    case 'last12': return [addMonths(to, -11), to];
+    case 'thisYear': return [`${to.slice(0, 4)}-01`, to];
+  }
+}
+
+/** "2026-11" → "Nov 26", for chart axes. */
+export function shortMonthLabel(key: MonthKey): string {
+  return format(monthKeyToDate(key), 'MMM yy');
+}

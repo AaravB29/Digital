@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney, formatMoneyForInput, parseMoney } from './money';
+import { formatMoney, formatMoneyForInput, formatMoneyShort, parseMoney } from './money';
 
 describe('parseMoney', () => {
   it.each([
@@ -75,5 +75,13 @@ describe('formatMoneyForInput', () => {
       expect(parseMoney(formatMoneyForInput(cents))).toBe(cents);
       expect(parseMoney(formatMoneyForInput(cents, 'en-US'))).toBe(cents);
     }
+  });
+});
+
+describe('formatMoneyShort', () => {
+  it('rounds to whole units for chart axes', () => {
+    expect(nbsp(formatMoneyShort(65000))).toBe('650 €');
+    expect(nbsp(formatMoneyShort(123456))).toBe('1.235 €');
+    expect(formatMoneyShort(1250, { currency: 'USD', locale: 'en-US' })).toBe('$13');
   });
 });

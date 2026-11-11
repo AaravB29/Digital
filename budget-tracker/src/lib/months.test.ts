@@ -12,6 +12,8 @@ import {
   monthKeyToDate,
   monthOfIsoDate,
   monthsInRange,
+  presetRange,
+  shortMonthLabel,
   nextMonth,
   prevMonth,
   toMonthKey,
@@ -103,5 +105,19 @@ describe('month entry helpers', () => {
     expect(isDateInMonth('2026-11-30', '2026-11')).toBe(true);
     expect(isDateInMonth('2026-12-01', '2026-11')).toBe(false);
     expect(isDateInMonth('', '2026-11')).toBe(false);
+  });
+});
+
+describe('ranges for trends', () => {
+  const now = new Date(2026, 10, 11);
+  it('ends every preset in the current month', () => {
+    expect(presetRange('last3', now)).toEqual(['2026-09', '2026-11']);
+    expect(presetRange('last6', now)).toEqual(['2026-06', '2026-11']);
+    expect(presetRange('last12', now)).toEqual(['2025-12', '2026-11']);
+    expect(presetRange('thisYear', now)).toEqual(['2026-01', '2026-11']);
+    expect(presetRange('thisYear', new Date(2027, 0, 5))).toEqual(['2027-01', '2027-01']);
+  });
+  it('makes short axis labels', () => {
+    expect(shortMonthLabel('2026-11')).toBe('Nov 26');
   });
 });
