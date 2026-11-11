@@ -219,6 +219,7 @@ src/
 
 ### Phase 6 — Polish
 - CSV export, JSON backup/import, PWA install, dark mode, empty states, mobile layout check at 375px width, keyboard-accessible forms.
+- **Day-by-day month trend** (added on request): on Trends, pick any month and see a cumulative line of spending through that month, compared with the previous month (and the monthly budget total, if set), so it's clear whether spending is running faster than usual. Logic in `src/lib/stats.ts` with tests.
 - **Done when:** I can install it on my phone and use it offline.
 
 ---
