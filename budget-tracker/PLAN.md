@@ -222,6 +222,19 @@ src/
 - **Day-by-day month trend** (added on request): on Trends, pick any month and see a cumulative line of spending through that month, compared with the previous month (and the monthly budget total, if set), so it's clear whether spending is running faster than usual. Logic in `src/lib/stats.ts` with tests.
 - **Done when:** I can install it on my phone and use it offline.
 
+### Phase 7 — Windows desktop app (added on request)
+Wrap the existing app with **Tauri 2** so it installs as a normal Windows program, independent of any browser.
+- Same React code; the desktop build uses relative paths and `#/` addresses, without the service worker (not needed in a desktop app).
+- Data lives in the app's own folder (`%LOCALAPPDATA%`), not in Chrome/Edge, so clearing browser data or uninstalling a browser cannot touch it. IndexedDB/Dexie stays as is; no data-model change.
+- **Automatic backups:** once a day when the app opens, write a JSON backup to `Documents\Budget Tracker Backups\`, keeping the newest 30. Setting to turn it off or open the folder. Logic for naming/rotation in `src/lib/` with tests.
+- Export CSV / backup through the normal Windows "Save as" dialog.
+- Moving data in: restore the website's backup file in the desktop app (existing Restore feature).
+- **Updates:** on start, check GitHub Releases for a newer version and show "Version X is available — Download" (no signing keys or secrets needed).
+- **Build:** a GitHub Actions workflow on `windows-latest` builds the installer (`.exe`) and attaches it to a GitHub Release, so no local tools are needed.
+- New dependencies: `@tauri-apps/cli`, `@tauri-apps/api`, Tauri `fs` and `dialog` plugins (Rust is only needed in CI).
+- The website and phone install keep working exactly as now.
+- **Done when:** I can download the installer from GitHub Releases, install it on Windows, open it with no browser, my data survives clearing browser data, and a backup file appears in Documents.
+
 ---
 
 ## 8. Instructions to Claude Code (put these in CLAUDE.md)
