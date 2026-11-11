@@ -56,7 +56,7 @@ export default function QuickAdd({ month, categories, locale, defaultCategoryId,
       </button>
 
       {sheetOpen && (
-        <div className="fixed inset-0 z-40 flex items-end bg-slate-900/40 md:hidden" onClick={() => setSheetOpen(false)}>
+        <div className="fixed inset-0 z-40 flex items-end bg-black/50 md:hidden" onClick={() => setSheetOpen(false)}>
           <div
             role="dialog"
             aria-modal="true"

@@ -1,0 +1,52 @@
+# Builds the budget tracker in budget-tracker/ and publishes it to GitHub Pages,
+# so it can be opened and installed on a phone. The Java project in this repo is not affected.
+name: Budget Tracker - GitHub Pages
+
+on:
+  push:
+    branches: [master, claude/new-session-9qelns]
+    paths: ['budget-tracker/**', '.github/workflows/budget-tracker-pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: budget-tracker-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: budget-tracker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: budget-tracker/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+        env:
+          # Relative paths and #/ addresses let the app run from https://<user>.github.io/<repo>/.
+          VITE_BASE: ./
+          VITE_ROUTER: hash
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: budget-tracker/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

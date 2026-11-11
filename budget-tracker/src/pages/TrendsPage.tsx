@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { useMoneyFormat } from '../hooks/useExpenses';
 import { useTrendsView } from '../hooks/useStats';
 import { averageMonthly } from '../lib/stats';
-import { formatMoney } from '../lib/money';
 import { formatMonthLabel, presetRange } from '../lib/months';
 import BudgetVsActualTable from '../components/BudgetVsActualTable';
 import MonthOverMonthTable from '../components/MonthOverMonthTable';
 import RangeSelector, { type RangeChoice } from '../components/RangeSelector';
 import SampleDataPanel from '../components/SampleDataPanel';
-import StatTile from '../components/StatTile';
+import TrendTiles from '../components/TrendTiles';
+import DailyTrendCard from '../components/DailyTrendCard';
+import ExportButtons from '../components/ExportButtons';
+import { db } from '../db/dexie';
+import { expensesToCsv } from '../lib/csv';
 import TopExpenses from '../components/TopExpenses';
-import { inputClass } from '../components/fieldStyles';
+import { inputBase } from '../components/fieldStyles';
 import ChartCard from '../components/charts/ChartCard';
 import CategoryDonut from '../components/charts/CategoryDonut';
 import CategoryStackChart from '../components/charts/CategoryStackChart';
@@ -27,11 +30,13 @@ export default function TrendsPage() {
   const [from, to] = choice === 'custom' ? custom : presetRange(choice);
   const v = useTrendsView(from, to);
   const [pickedCategory, setPickedCategory] = useState<string | null>(null);
+  const [dailyMonth, setDailyMonth] = useState<string | null>(null);
+  // Months that only hold €0 fixed placeholders count as empty too.
+  const isEmpty = !v.loading && v.series.every((p) => p.spent === 0);
 
   const trendId = pickedCategory && v.byId.has(pickedCategory) ? pickedCategory : v.rankedCategoryIds[0] ?? v.categories[0]?.id;
   const trendCategory = trendId ? v.byId.get(trendId) : undefined;
   const trendValues = (trendId && v.matrix.get(trendId)) || v.months.map(() => 0);
-  const money = (cents: number) => formatMoney(cents, moneyFormat);
   const rangeLabel = from === to ? formatMonthLabel(from) : `${formatMonthLabel(from)} – ${formatMonthLabel(to)}`;
   const endLabel = formatMonthLabel(to);
 
@@ -52,25 +57,19 @@ export default function TrendsPage() {
         onCustom={(f, t) => setCustom([f, t])}
       />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatTile label="Average per month" value={money(v.tiles.average)} detail="months with spending" />
-        <StatTile label="Highest month" value={v.tiles.highest ? money(v.tiles.highest.spent) : '–'} detail={v.tiles.highest ? formatMonthLabel(v.tiles.highest.month) : 'no spending yet'} />
-        <StatTile
-          label="Biggest category"
-          value={v.tiles.biggest?.category?.name ?? '–'}
-          detail={v.tiles.biggest ? `${money(v.tiles.biggest.total)} · ${v.tiles.biggest.percent.toLocaleString(moneyFormat.locale)} %` : undefined}
-        />
-        <StatTile
-          label="Savings rate"
-          value={v.tiles.savings === null ? '–' : `${v.tiles.savings.toLocaleString(moneyFormat.locale)} %`}
-          detail={v.tiles.savings === null ? 'add income to see it' : 'of income not spent'}
-          tone={v.tiles.savings === null ? 'default' : v.tiles.savings < 0 ? 'bad' : 'good'}
-        />
-      </div>
+      {isEmpty ? (
+        <div className="rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center text-slate-500">
+          No spending in {rangeLabel} yet. Add some on the Month page{SHOW_TEST_TOOLS ? ', or load sample data below' : ''}, and charts will appear here.
+        </div>
+      ) : (
+      <>
+      <TrendTiles tiles={v.tiles} moneyFormat={moneyFormat} />
 
       <ChartCard title="Spending and income per month">
         <SpendingIncomeChart series={v.series} moneyFormat={moneyFormat} />
       </ChartCard>
+
+      <DailyTrendCard month={dailyMonth ?? to} onMonthChange={setDailyMonth} categories={v.categories} moneyFormat={moneyFormat} />
 
       <div className="grid gap-5 lg:grid-cols-2">
         <ChartCard title="Spending by category" subtitle="Smaller categories are grouped as Other">
@@ -82,7 +81,7 @@ export default function TrendsPage() {
         <ChartCard
           title="One category over time"
           action={
-            <select aria-label="Category" className={`${inputClass} w-auto py-1.5 text-sm`} value={trendId ?? ''} onChange={(e) => setPickedCategory(e.target.value)}>
+            <select aria-label="Category" className={`${inputBase} w-auto max-w-full py-1.5 text-sm`} value={trendId ?? ''} onChange={(e) => setPickedCategory(e.target.value)}>
               {v.categories.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
             </select>
           }
@@ -108,6 +107,18 @@ export default function TrendsPage() {
           <TopExpenses expenses={v.top} categories={v.byId} moneyFormat={moneyFormat} />
         </ChartCard>
       </div>
+
+      </>
+      )}
+
+      <ChartCard title="Export" subtitle={`Expenses from ${rangeLabel}`}>
+        <ExportButtons
+          label="Export CSV"
+          fileName={`budget-expenses-${from}-to-${to}.csv`}
+          type="text/csv"
+          build={async () => expensesToCsv(v.expenses, v.categories, await db.fixedTemplates.toArray(), moneyFormat.currency)}
+        />
+      </ChartCard>
 
       {SHOW_TEST_TOOLS && <SampleDataPanel />}
     </div>

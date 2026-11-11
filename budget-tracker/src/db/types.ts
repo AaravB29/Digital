@@ -66,4 +66,6 @@ export interface Settings {
   currency: string;
   locale: string;
   startOfMonthDay: number;
+  /** ISO time of the last backup download; undefined until the first one. */
+  lastBackupAt?: string;
 }

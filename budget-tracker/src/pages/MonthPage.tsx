@@ -16,6 +16,7 @@ import MonthHeader from '../components/MonthHeader';
 import QuickAdd from '../components/QuickAdd';
 import SummaryBar from '../components/SummaryBar';
 import UndoToast from '../components/UndoToast';
+import BackupReminder from '../components/BackupReminder';
 
 export default function MonthPage() {
   const { month, isValid, goTo } = useMonth();
@@ -51,6 +52,7 @@ export default function MonthPage() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-5">
+      <BackupReminder />
       <MonthHeader month={month} onChange={goTo} />
       <SummaryBar summary={summary} format={moneyFormat} />
       <CategoryTabs

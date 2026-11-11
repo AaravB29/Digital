@@ -1,7 +1,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { formatMoney, type MoneyFormat } from '../../lib/money';
 import ChartTooltip from './ChartTooltip';
-import { CHART } from './chartTheme';
+import { useChartColors } from './chartTheme';
 
 export interface DonutSlice {
   key: string;
@@ -13,13 +13,14 @@ export interface DonutSlice {
 
 /** Donut with a legend that carries every name, amount and percentage. */
 export default function CategoryDonut({ slices, total, moneyFormat }: { slices: DonutSlice[]; total: number; moneyFormat: MoneyFormat }) {
+  const c = useChartColors();
   if (slices.length === 0) return <p className="py-10 text-center text-slate-500">No spending in this month.</p>;
   return (
     <div className="flex flex-col items-center gap-4 sm:flex-row">
       <div className="relative h-48 w-48 shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={slices} dataKey="total" nameKey="label" innerRadius="62%" outerRadius="100%" stroke={CHART.surface} strokeWidth={2} isAnimationActive={false}>
+            <Pie data={slices} dataKey="total" nameKey="label" innerRadius="62%" outerRadius="100%" stroke={c.surface} strokeWidth={2} isAnimationActive={false}>
               {slices.map((s) => <Cell key={s.key} fill={s.color} />)}
             </Pie>
             <Tooltip content={<ChartTooltip moneyFormat={moneyFormat} />} />

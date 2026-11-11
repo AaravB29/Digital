@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/dexie';
 import { ensureFixedExpenses } from '../db/fixedActions';
 import type { Category, Expense, Income, MonthKey } from '../db/types';
-import { currentMonthKey, monthsInRange } from '../lib/months';
+import { currentMonthKey, monthsInRange, prevMonth } from '../lib/months';
 import {
   averageMonthly,
   budgetVsActual,
@@ -18,7 +18,7 @@ import {
   topExpenses,
   totalsByCategory,
 } from '../lib/stats';
-import { CHART } from '../components/charts/chartTheme';
+import { OTHER_COLOR } from '../components/charts/chartTheme';
 
 export interface TrendsData {
   months: MonthKey[];
@@ -74,16 +74,16 @@ export function useTrendsView(from: MonthKey, to: MonthKey) {
   const { kept, folded } = foldSmallCategories(rangeTotals, STACK_KEEP);
   const stack = foldMatrix(matrix, kept, folded, months.length);
   const stackSeries = stack.rows.map(({ categoryId, values }) => ({
-    key: categoryId, label: byId.get(categoryId)?.name ?? categoryId, color: byId.get(categoryId)?.color ?? CHART.other, values,
+    key: categoryId, label: byId.get(categoryId)?.name ?? categoryId, color: byId.get(categoryId)?.color ?? OTHER_COLOR, values,
   }));
-  if (stack.other) stackSeries.push({ key: OTHER_KEY, label: `Other (${folded.length})`, color: CHART.other, values: stack.other });
+  if (stack.other) stackSeries.push({ key: OTHER_KEY, label: `Other (${folded.length})`, color: OTHER_COLOR, values: stack.other });
 
   const endTotals = totalsByCategory(expenses.filter((e) => e.month === to));
   const donut = foldShares(endTotals, DONUT_KEEP);
   const donutSlices = donut.shares.map((s) => ({
-    key: s.categoryId, label: byId.get(s.categoryId)?.name ?? s.categoryId, color: byId.get(s.categoryId)?.color ?? CHART.other, total: s.total, percent: s.percent,
+    key: s.categoryId, label: byId.get(s.categoryId)?.name ?? s.categoryId, color: byId.get(s.categoryId)?.color ?? OTHER_COLOR, total: s.total, percent: s.percent,
   }));
-  if (donut.other) donutSlices.push({ key: OTHER_KEY, label: `Other (${donut.other.count})`, color: CHART.other, ...donut.other });
+  if (donut.other) donutSlices.push({ key: OTHER_KEY, label: `Other (${donut.other.count})`, color: OTHER_COLOR, ...donut.other });
 
   const spentTotal = series.reduce((s, p) => s + p.spent, 0);
   const incomeTotal = series.reduce((s, p) => s + p.income, 0);
@@ -107,5 +107,21 @@ export function useTrendsView(from: MonthKey, to: MonthKey) {
     budgetRows: budgetVsActual(categories.filter((c) => !c.archived), endTotals),
     top: topExpenses(expenses.filter((e) => !fixedIds.has(e.categoryId)), 5),
     rankedCategoryIds: ranked.map((r) => r.categoryId),
+  };
+}
+
+/** A month and the one before it, for the day-by-day comparison. */
+export function useMonthPair(month: MonthKey) {
+  const previous = prevMonth(month);
+  useEffect(() => {
+    const now = currentMonthKey();
+    for (const m of [previous, month]) if (m <= now) void ensureFixedExpenses(m);
+  }, [month, previous]);
+  const rows = useLiveQuery(() => db.expenses.where('month').anyOf([previous, month]).toArray(), [month, previous]);
+  return {
+    previous,
+    current: (rows ?? []).filter((e) => e.month === month),
+    before: (rows ?? []).filter((e) => e.month === previous),
+    loading: !rows,
   };
 }

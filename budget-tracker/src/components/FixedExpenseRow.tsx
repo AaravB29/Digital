@@ -1,7 +1,7 @@
 import { useId, useState, type FormEvent } from 'react';
 import type { Expense, FixedExpenseTemplate } from '../db/types';
 import { formatMoney, formatMoneyForInput, parseMoney, type MoneyFormat } from '../lib/money';
-import { inputClass } from './fieldStyles';
+import { inputBase } from './fieldStyles';
 import { ordinal } from '../lib/fixed';
 
 interface Props {
@@ -53,7 +53,7 @@ export default function FixedExpenseRow({ row, template, moneyFormat, onTogglePa
         <form onSubmit={save} className="flex items-center gap-2">
           <input
             aria-label={`Amount for ${name} this month`}
-            className={`${inputClass} w-28 py-1 tabular-nums`}
+            className={`${inputBase} w-28 py-1 tabular-nums`}
             inputMode="decimal"
             autoFocus
             value={text}

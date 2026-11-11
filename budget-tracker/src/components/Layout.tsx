@@ -21,6 +21,7 @@ export default function Layout() {
       <nav
         aria-label="Main"
         className="fixed bottom-0 inset-x-0 z-10 flex gap-1 border-t border-slate-200 bg-white p-1
+                   pb-[max(0.25rem,env(safe-area-inset-bottom))]
                    md:static md:w-56 md:flex-col md:border-t-0 md:border-r md:p-4"
       >
         <div className="hidden md:block mb-6 px-3 text-lg font-bold text-teal-700">💶 Budget</div>

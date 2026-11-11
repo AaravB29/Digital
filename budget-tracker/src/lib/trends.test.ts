@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   averageMonthly,
+  cumulativeByDay,
+  dailyComparison,
+  plannedMonthTotal,
   budgetVsActual,
   categoryMonthMatrix,
   foldMatrix,
@@ -145,5 +148,47 @@ describe('folding into Other', () => {
     expect(other).toEqual({ total: 2000, percent: 20, count: 2 });
     expect(shares.reduce((s, x) => s + x.total, 0) + other!.total).toBe(10000);
     expect(foldShares(totals, 3).other).toBeNull();
+  });
+});
+
+describe('day-by-day month trend', () => {
+  const nov = [
+    { date: '2026-11-01', amount: 65000 },
+    { date: '2026-11-03', amount: 1250 },
+    { date: '2026-11-03', amount: 320 },
+    { date: '2026-11-30', amount: 1000 },
+    { date: '2026-12-01', amount: 9999 }, // other month, ignored
+  ];
+
+  it('builds running totals per day', () => {
+    const c = cumulativeByDay(nov, '2026-11', 30);
+    expect(c).toHaveLength(30);
+    expect(c.slice(0, 4)).toEqual([65000, 65000, 66570, 66570]);
+    expect(c[29]).toBe(67570);
+    expect(c[29]).toBe(totalForMonth(nov.slice(0, 4)));
+  });
+
+  it('aligns a short month with a long one and cuts the current line at today', () => {
+    const feb = [1, 2, 3]; // 3-day toy month
+    const jan = [10, 20, 30, 40, 50];
+    expect(dailyComparison(feb, jan)).toEqual([
+      { day: 1, current: 1, previous: 10 },
+      { day: 2, current: 2, previous: 20 },
+      { day: 3, current: 3, previous: 30 },
+      { day: 4, current: null, previous: 40 },
+      { day: 5, current: null, previous: 50 },
+    ]);
+    expect(dailyComparison(jan, feb, 2).map((p) => p.current)).toEqual([10, 20, null, null, null]);
+  });
+
+  it('plans the month as fixed costs plus category budgets', () => {
+    const cats = [
+      { isFixed: true, archived: false, monthlyBudget: 99999 }, // the Fixed category's own budget is not added twice
+      { isFixed: false, archived: false, monthlyBudget: 25000 },
+      { isFixed: false, archived: true, monthlyBudget: 5000 },
+      { isFixed: false, archived: false },
+    ];
+    expect(plannedMonthTotal(78550, cats)).toBe(103550);
+    expect(plannedMonthTotal(78550, [{ isFixed: false, archived: false }])).toBeNull();
   });
 });

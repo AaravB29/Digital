@@ -1,5 +1,5 @@
 import type { MonthKey } from '../db/types';
-import { inputClass } from './fieldStyles';
+import { inputBase } from './fieldStyles';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -20,13 +20,13 @@ export default function MonthSelect({ id, value, onChange, disabled }: Props) {
   const emit = (y: number, m: number) => onChange(`${y}-${String(m).padStart(2, '0')}`);
 
   return (
-    <div className="flex gap-2">
-      <select id={id} aria-label="Month" className={inputClass} disabled={disabled} value={month} onChange={(e) => emit(year, Number(e.target.value))}>
+    <div className="flex min-w-0 gap-2">
+      <select id={id} aria-label="Month" className={`${inputBase} min-w-0 flex-1`} disabled={disabled} value={month} onChange={(e) => emit(year, Number(e.target.value))}>
         {MONTHS.map((name, i) => (
           <option key={name} value={i + 1}>{name}</option>
         ))}
       </select>
-      <select aria-label="Year" className={`${inputClass} w-28`} disabled={disabled} value={year} onChange={(e) => emit(Number(e.target.value), month)}>
+      <select aria-label="Year" className={`${inputBase} w-24 shrink-0`} disabled={disabled} value={year} onChange={(e) => emit(Number(e.target.value), month)}>
         {years.sort().map((y) => (
           <option key={y} value={y}>{y}</option>
         ))}

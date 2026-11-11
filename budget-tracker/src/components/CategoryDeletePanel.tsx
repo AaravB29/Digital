@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import type { Category } from '../db/types';
 import { countCategoryExpenses, deleteCategory, moveExpensesAndDelete, setCategoryArchived } from '../db/categoryActions';
-import { inputClass } from './fieldStyles';
+import { inputBase } from './fieldStyles';
 
 interface Props {
   category: Category;
@@ -45,7 +45,7 @@ export default function CategoryDeletePanel({ category, targets, onDone }: Props
           <button type="button" className={plain} onClick={() => void setCategoryArchived(category.id, true).then(onDone)}>Archive instead</button>
         )}
         <label htmlFor={`${id}-to`} className="ml-auto">Move to</label>
-        <select id={`${id}-to`} className={`${inputClass} w-auto py-1.5 text-sm`} value={targetId} onChange={(e) => setTargetId(e.target.value)}>
+        <select id={`${id}-to`} className={`${inputBase} w-auto py-1.5 text-sm`} value={targetId} onChange={(e) => setTargetId(e.target.value)}>
           {targets.map((c) => (
             <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
           ))}

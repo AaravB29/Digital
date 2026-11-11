@@ -4,7 +4,7 @@ import type { ExpenseInput } from '../db/actions';
 import { filterAndSortExpenses, type ExpenseSort } from '../lib/categories';
 import type { MoneyFormat } from '../lib/money';
 import ExpenseList from './ExpenseList';
-import { inputClass } from './fieldStyles';
+import { inputBase } from './fieldStyles';
 
 interface Props {
   expenses: Expense[];
@@ -29,13 +29,13 @@ export default function AllExpensesView({ expenses, categories, ...rest }: Props
         <input
           id={`${id}-q`}
           type="search"
-          className={`${inputClass} min-w-0 flex-1`}
+          className={`${inputBase} min-w-0 flex-1`}
           placeholder="Search notes or categories"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <label htmlFor={`${id}-sort`} className="sr-only">Sort by</label>
-        <select id={`${id}-sort`} className={`${inputClass} w-auto`} value={sort} onChange={(e) => setSort(e.target.value as ExpenseSort)}>
+        <select id={`${id}-sort`} className={`${inputBase} w-auto shrink-0`} value={sort} onChange={(e) => setSort(e.target.value as ExpenseSort)}>
           <option value="date">Newest first</option>
           <option value="amount">Largest first</option>
         </select>

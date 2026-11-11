@@ -178,3 +178,45 @@ export function foldShares(totals: Map<string, number>, keep: number) {
     other: { total: otherTotal, percent: Math.round((otherTotal * 1000) / sum) / 10, count: rest.length },
   };
 }
+
+/** Running total for each day of the month: index 0 is day 1. Dates outside the month are ignored. */
+export function cumulativeByDay(expenses: Pick<Expense, 'date' | 'amount'>[], month: string, daysInMonth: number): number[] {
+  const perDay = Array<number>(daysInMonth).fill(0);
+  for (const e of expenses) {
+    if (e.date.slice(0, 7) !== month) continue;
+    const day = Number(e.date.slice(8, 10));
+    if (day >= 1 && day <= daysInMonth) perDay[day - 1] += e.amount;
+  }
+  let running = 0;
+  return perDay.map((v) => (running += v));
+}
+
+export interface DayPoint {
+  day: number;
+  /** Null after the month's last day, or after today when it is the current month. */
+  current: number | null;
+  previous: number | null;
+}
+
+/**
+ * Day-by-day running totals of a month next to the previous month, aligned by day number.
+ * `lastDayShown` cuts the current line (e.g. today's date in the current month).
+ */
+export function dailyComparison(current: number[], previous: number[], lastDayShown: number = current.length): DayPoint[] {
+  const days = Math.max(current.length, previous.length);
+  return Array.from({ length: days }, (_, i) => ({
+    day: i + 1,
+    current: i < current.length && i < lastDayShown ? current[i] : null,
+    previous: i < previous.length ? previous[i] : null,
+  }));
+}
+
+/** What the month should cost if every budget is kept: fixed costs plus the budgets of other categories. */
+export function plannedMonthTotal(
+  fixedTotal: number,
+  categories: Array<{ isFixed: boolean; archived: boolean; monthlyBudget?: number }>,
+): number | null {
+  const budgets = categories.filter((c) => !c.isFixed && !c.archived && c.monthlyBudget && c.monthlyBudget > 0);
+  if (budgets.length === 0) return null;
+  return fixedTotal + budgets.reduce((s, c) => s + c.monthlyBudget!, 0);
+}

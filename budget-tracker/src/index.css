@@ -1,1 +1,63 @@
 @import "tailwindcss";
+
+/* Dark mode follows a .dark class on <html>, set from the theme setting (System / Light / Dark). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Dark palette. Tailwind colours are CSS variables, so dark mode swaps the neutral scale
+ * end for end (white surfaces become slate-900, slate-900 text becomes slate-50) and
+ * moves accent colours to lighter steps that keep their contrast on dark surfaces.
+ */
+.dark {
+  color-scheme: dark;
+  --color-white: #0f172a;
+  --color-slate-50: #020617;
+  --color-slate-100: #1e293b;
+  --color-slate-200: #334155;
+  --color-slate-300: #475569;
+  --color-slate-400: #64748b;
+  --color-slate-500: #94a3b8;
+  --color-slate-600: #cbd5e1;
+  --color-slate-700: #e2e8f0;
+  --color-slate-800: #f1f5f9;
+  --color-slate-900: #f8fafc;
+
+  --color-teal-50: #042f2e;
+  --color-teal-100: #134e4a;
+  --color-teal-300: #0f766e;
+  --color-teal-600: #2dd4bf;
+  --color-teal-700: #5eead4;
+  --color-teal-800: #99f6e4;
+  --color-teal-900: #ccfbf1;
+
+  --color-emerald-700: #6ee7b7;
+  --color-red-50: #450a0a;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
+  --color-amber-50: #451a03;
+  --color-amber-100: #78350f;
+  --color-amber-300: #b45309;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-sky-100: #0c4a6e;
+  --color-sky-800: #bae6fd;
+}
+
+body {
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-900);
+}
+
+/* A visible keyboard focus ring everywhere, without showing it on mouse clicks. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-teal-600);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

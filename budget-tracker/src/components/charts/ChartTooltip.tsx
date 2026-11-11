@@ -13,18 +13,20 @@ interface Props {
   label?: string | number;
   payload?: Entry[];
   moneyFormat: MoneyFormat;
+  /** Text before the label, e.g. "Day ". */
+  labelPrefix?: string;
   /** Optional line under the values, e.g. a total. */
   footer?: (entries: Entry[]) => string | null;
 }
 
 /** Shared hover card: label, then one row per series with its colour and value. */
-export default function ChartTooltip({ active, label, payload, moneyFormat, footer }: Props) {
+export default function ChartTooltip({ active, label, payload, moneyFormat, labelPrefix = '', footer }: Props) {
   if (!active || !payload?.length) return null;
   const rows = payload.filter((p) => typeof p.value === 'number');
   const extra = footer?.(rows);
   return (
     <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg">
-      {label !== undefined && <p className="mb-1 font-medium">{label}</p>}
+      {label !== undefined && <p className="mb-1 font-medium">{labelPrefix}{label}</p>}
       {rows.map((p) => (
         <p key={String(p.name)} className="flex items-center gap-2">
           <span aria-hidden className="h-2 w-2 rounded-sm" style={{ backgroundColor: p.color ?? p.payload?.fill }} />
