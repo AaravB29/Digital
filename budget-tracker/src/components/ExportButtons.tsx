@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { copyText, downloadText, DOWNLOADS_BLOCKED } from '../lib/download';
+import { isDesktop } from '../desktop/platform';
+import { saveWithDialog } from '../desktop/files';
 import { secondaryButton } from './fieldStyles';
 
 interface Props {
@@ -17,7 +19,16 @@ export default function ExportButtons({ label, fileName, type, build, onDone }: 
   const [status, setStatus] = useState<string | null>(null);
 
   async function download() {
-    downloadText(fileName, await build(), type);
+    if (isDesktop()) {
+      // Desktop app: the normal Windows "Save as" dialog.
+      try {
+        if ((await saveWithDialog(fileName, await build())) === 'cancelled') return;
+      } catch (e) {
+        return setStatus(`Could not save: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    } else {
+      downloadText(fileName, await build(), type);
+    }
     setStatus(`Saved ${fileName}`);
     onDone?.();
   }

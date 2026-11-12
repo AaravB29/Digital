@@ -1,0 +1,74 @@
+# Builds the Windows desktop version of budget-tracker/ (Tauri) and publishes the installer
+# as a GitHub Release named desktop-v<version>. A version that is already released is only
+# built (as a check), not published again: bump "version" in budget-tracker/package.json to release.
+name: Budget Tracker - Windows app
+
+on:
+  push:
+    branches: [master, claude/new-session-9qelns]
+    paths: ['budget-tracker/**', '.github/workflows/budget-tracker-desktop.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: budget-tracker-desktop
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: budget-tracker
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: budget-tracker/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: 'budget-tracker/src-tauri -> target'
+      - run: npm ci
+      - run: npm test
+
+      - name: Is this version already released?
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(node -p "require('./package.json').version")
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          if gh release view "desktop-v$v" > /dev/null 2>&1; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Build and publish the installer
+        if: steps.version.outputs.exists == 'false'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          projectPath: budget-tracker
+          tagName: desktop-v__VERSION__
+          releaseName: Budget Tracker v__VERSION__ for Windows
+          releaseBody: |
+            **To install:** download the `.exe` file below and run it.
+            Windows may say "Windows protected your PC" because the app is not code-signed: click **More info → Run anyway**.
+            Installing a newer version over an older one keeps all your data.
+          releaseDraft: false
+          prerelease: false
+
+      - name: Build only (this version is already released)
+        if: steps.version.outputs.exists == 'true'
+        run: npm run tauri build
+
+      - name: Keep the installer with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: budget-tracker-windows-installer
+          path: budget-tracker/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error

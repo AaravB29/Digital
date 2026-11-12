@@ -68,4 +68,6 @@ export interface Settings {
   startOfMonthDay: number;
   /** ISO time of the last backup download; undefined until the first one. */
   lastBackupAt?: string;
+  /** Desktop app: save a backup to Documents every day. Undefined means on. */
+  autoBackup?: boolean;
 }

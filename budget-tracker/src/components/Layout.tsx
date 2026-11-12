@@ -1,4 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import UpdateNotice from './UpdateNotice';
+import { useAutoBackup } from '../desktop/useAutoBackup';
 
 const NAV_ITEMS = [
   { to: '/month', icon: '📅', label: 'Month' },
@@ -15,6 +17,7 @@ function linkClass({ isActive }: { isActive: boolean }): string {
 }
 
 export default function Layout() {
+  useAutoBackup();
   return (
     <div className="min-h-screen md:flex bg-slate-50 text-slate-900">
       {/* Sidebar on desktop, bottom bar on mobile */}
@@ -33,6 +36,7 @@ export default function Layout() {
         ))}
       </nav>
       <main className="flex-1 p-4 pb-24 md:p-8">
+        <UpdateNotice />
         <Outlet />
       </main>
     </div>

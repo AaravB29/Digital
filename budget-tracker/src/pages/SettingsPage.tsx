@@ -5,6 +5,7 @@ import BackupSettings from '../components/BackupSettings';
 import CategoryManager from '../components/CategoryManager';
 import CurrencySettings from '../components/CurrencySettings';
 import FixedTemplateManager from '../components/FixedTemplateManager';
+import { isDesktop } from '../desktop/platform';
 
 function Section({ id, title, intro, children }: { id?: string; title: string; intro?: string; children: ReactNode }) {
   return (
@@ -43,6 +44,7 @@ export default function SettingsPage() {
       <Section id="backup" title="Backup and export">
         <BackupSettings />
       </Section>
+      <p className="text-sm text-slate-500">Budget Tracker v{__APP_VERSION__}{isDesktop() ? ' · Windows app' : ''}</p>
     </div>
   );
 }

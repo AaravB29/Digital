@@ -30,6 +30,20 @@ One-time setup in the GitHub repository:
    (or merge into the default branch, which is allowed already).
 3. Re-run the workflow from the **Actions** tab. The app is then at `https://<user>.github.io/<repo>/`.
 
+## Windows desktop app (Tauri)
+
+The same app, wrapped as a Windows program with its own data folder (not tied to a browser).
+`src-tauri/` holds the Rust shell; all budget logic stays in `src/`. Desktop-only code lives in `src/desktop/`
+and is loaded only when the app runs inside Tauri.
+
+- **Get it:** GitHub → Releases → *Budget Tracker vX for Windows* → download the `.exe` and run it.
+  Windows may say "Windows protected your PC" (the app is not code-signed): **More info → Run anyway**.
+- **Build:** `.github/workflows/budget-tracker-desktop.yml` builds the installer on `windows-latest` for every push.
+  It publishes a new release only when `version` in `package.json` has no `desktop-v<version>` release yet,
+  so **bump the version to release an update**. The app shows "A new version is available" on its next start.
+- **Daily backup:** a JSON backup in `Documents\Budget Tracker Backups\` once a day (newest 30 kept), switchable in Settings.
+- **Local build** (needs Rust; on Linux also WebKitGTK): `npm run tauri build` or `npm run tauri dev`.
+
 ## Backups
 
 Everything lives on the device. **Settings → Backup and export** downloads a JSON backup (restorable on any device)

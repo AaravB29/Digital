@@ -7,17 +7,21 @@ import { VitePWA } from 'vite-plugin-pwa';
 // Only process.env is used here, so declare it instead of adding @types/node.
 declare const process: { env: Record<string, string | undefined> };
 
+import pkg from './package.json';
+
 // VITE_PREVIEW=1: one self-contained file for the sandboxed preview page (no service worker there).
 const isPreview = !!process.env.VITE_PREVIEW;
 
-export default defineConfig({
-  // A relative base lets the same build run from any folder, e.g. https://<user>.github.io/<repo>/.
-  base: process.env.VITE_BASE ?? '/',
+export default defineConfig(({ mode }) => ({
+  // `--mode desktop` builds the Windows app (Tauri): relative paths, #/ addresses, no service worker.
+  // A relative base also lets the web build run from any folder, e.g. https://<user>.github.io/<repo>/.
+  base: mode === 'desktop' ? './' : (process.env.VITE_BASE ?? '/'),
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
-      disable: isPreview,
+      disable: isPreview || mode === 'desktop',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
@@ -48,4 +52,4 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
   },
-});
+}));
