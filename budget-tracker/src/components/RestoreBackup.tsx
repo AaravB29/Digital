@@ -1,6 +1,7 @@
 import { useId, useState, type ChangeEvent } from 'react';
 import { restoreBackup } from '../db/backupActions';
 import { parseBackup, type BackupFile } from '../lib/backup';
+import { isAndroid } from '../native';
 
 type State =
   | { kind: 'idle' }
@@ -26,7 +27,7 @@ export default function RestoreBackup() {
     <div className="flex flex-col gap-3">
       <div>
         <label htmlFor={`${id}-file`} className="mb-1 block text-sm font-medium">Restore from a backup file</label>
-        <input id={`${id}-file`} type="file" accept=".json,application/json" onChange={(e) => void onFile(e)}
+        <input id={`${id}-file`} type="file" accept={isAndroid() ? undefined : '.json,application/json'} onChange={(e) => void onFile(e)}
           className="block w-full text-sm file:mr-3 file:rounded-lg file:border file:border-slate-300 file:bg-white file:px-3 file:py-2 file:text-slate-900 hover:file:bg-slate-100" />
       </div>
       {state.kind === 'error' && <p role="alert" className="text-sm text-red-700">{state.message}</p>}

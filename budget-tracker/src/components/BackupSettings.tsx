@@ -6,16 +6,21 @@ import { backupFileName } from '../lib/backup';
 import { expensesToCsv } from '../lib/csv';
 import ExportButtons from './ExportButtons';
 import RestoreBackup from './RestoreBackup';
-import DesktopBackupSettings from './DesktopBackupSettings';
-import { isDesktop } from '../desktop/platform';
+import { useEffect, useState } from 'react';
+import NativeBackupSettings from './NativeBackupSettings';
+import { getNativeShell, type NativeShell } from '../native';
 
 export default function BackupSettings() {
   const settings = useLiveQuery(() => db.settings.get(SETTINGS_ID), []);
   const last = settings?.lastBackupAt;
+  const [shell, setShell] = useState<NativeShell | null>(null);
+  useEffect(() => {
+    void getNativeShell().then(setShell);
+  }, []);
 
   return (
     <div className="flex flex-col gap-5">
-      {isDesktop() && <DesktopBackupSettings />}
+      {shell && <NativeBackupSettings shell={shell} />}
       <div>
         <h3 className="font-medium">Backup</h3>
         <p className="mb-2 mt-1 text-sm text-slate-600">

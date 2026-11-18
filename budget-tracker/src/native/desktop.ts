@@ -1,5 +1,6 @@
-// Desktop-only helpers. Tauri modules are imported on demand so the website never loads them.
+// Windows app (Tauri). This file is only loaded inside the desktop app.
 import { AUTO_BACKUP_FOLDER, autoBackupFileName, planAutoBackup } from '../lib/autoBackup';
+import type { NativeShell } from './types';
 
 /** Shows the Windows "Save as" dialog and writes the file. */
 export async function saveWithDialog(fileName: string, text: string): Promise<'saved' | 'cancelled'> {
@@ -43,3 +44,13 @@ export async function openInBrowser(url: string): Promise<void> {
   const { openUrl } = await import('@tauri-apps/plugin-opener');
   await openUrl(url);
 }
+
+export const desktopShell: NativeShell = {
+  kind: 'desktop',
+  releasePrefix: 'desktop-v',
+  saveFile: saveWithDialog,
+  runAutoBackup,
+  backupFolderLabel: backupFolderPath,
+  openBackupFolder,
+  openInBrowser,
+};

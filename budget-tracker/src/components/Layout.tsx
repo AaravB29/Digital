@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import UpdateNotice from './UpdateNotice';
-import { useAutoBackup } from '../desktop/useAutoBackup';
+import { useAutoBackup } from '../native/useAutoBackup';
+import { useAndroidShell } from '../native/useAndroidShell';
 
 const NAV_ITEMS = [
   { to: '/month', icon: '📅', label: 'Month' },
@@ -18,8 +19,9 @@ function linkClass({ isActive }: { isActive: boolean }): string {
 
 export default function Layout() {
   useAutoBackup();
+  useAndroidShell();
   return (
-    <div className="min-h-screen md:flex bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] text-slate-900 md:flex">
       {/* Sidebar on desktop, bottom bar on mobile */}
       <nav
         aria-label="Main"

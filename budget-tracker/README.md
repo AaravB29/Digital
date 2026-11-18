@@ -33,7 +33,7 @@ One-time setup in the GitHub repository:
 ## Windows desktop app (Tauri)
 
 The same app, wrapped as a Windows program with its own data folder (not tied to a browser).
-`src-tauri/` holds the Rust shell; all budget logic stays in `src/`. Desktop-only code lives in `src/desktop/`
+`src-tauri/` holds the Rust shell; all budget logic stays in `src/`. Windows-specific code is `src/native/desktop.ts`
 and is loaded only when the app runs inside Tauri.
 
 - **Get it:** GitHub → Releases → *Budget Tracker vX for Windows* → download the `.exe` and run it.
@@ -43,6 +43,24 @@ and is loaded only when the app runs inside Tauri.
   so **bump the version to release an update**. The app shows "A new version is available" on its next start.
 - **Daily backup:** a JSON backup in `Documents\Budget Tracker Backups\` once a day (newest 30 kept), switchable in Settings.
 - **Local build** (needs Rust; on Linux also WebKitGTK): `npm run tauri build` or `npm run tauri dev`.
+
+## Android app (Capacitor)
+
+The same app as an installable Android program (`.apk`). `android/` is the Capacitor Android project;
+platform code shared with Windows lives in `src/native/` (Android-specific parts in `src/native/android.ts`).
+
+- **Get it:** on the phone, GitHub → Releases → *Budget Tracker vX for Android* → tap the `.apk`.
+  Allow the browser to install unknown apps; if Play Protect warns, **More details → Install anyway**.
+- **Build:** `.github/workflows/budget-tracker-android.yml` builds on every push and publishes `android-v<version>`
+  when that version has no release yet (bump `version` in `package.json` to release).
+- **Signing:** releases must always be signed with the same key, or Android refuses to update the installed app.
+  The key lives only in two repository secrets, **`ANDROID_KEYSTORE_BASE64`** (the keystore file, base64) and
+  **`ANDROID_KEYSTORE_PASSWORD`**; keep a private copy of both. Without them the workflow builds a test APK only.
+- **Daily backup:** to the phone's `Documents/Budget Tracker Backups` (newest 30 kept), switchable in Settings.
+- **Local build:** needs JDK 21 and the Android SDK: `npm run build:android && npx cap sync android`, then
+  `cd android && ./gradlew assembleDebug` (or open `android/` in Android Studio).
+- **Testing the Android code in a browser (dev only):** run `localStorage.setItem('simulate-android', '1')`
+  in the dev server's console and reload; Capacitor's web fallbacks stand in for the phone.
 
 ## Backups
 

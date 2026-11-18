@@ -3,24 +3,24 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/dexie';
 import { buildBackupNow, markBackedUp } from '../db/backupActions';
 import { SETTINGS_ID } from '../db/types';
-import { backupFolderPath, openBackupFolder, runAutoBackup } from '../desktop/files';
+import type { NativeShell } from '../native';
 import { AUTO_BACKUP_KEEP } from '../lib/autoBackup';
 import { secondaryButton } from './fieldStyles';
 
-/** Desktop app: daily backups to Documents, with a switch and quick actions. */
-export default function DesktopBackupSettings() {
+/** Windows and Android apps: daily backups to the Documents folder, with a switch and quick actions. */
+export default function NativeBackupSettings({ shell }: { shell: NativeShell }) {
   const settings = useLiveQuery(() => db.settings.get(SETTINGS_ID), []);
-  const [folder, setFolder] = useState('Documents\\Budget Tracker Backups');
+  const [folder, setFolder] = useState('Documents › Budget Tracker Backups');
   const [status, setStatus] = useState<string | null>(null);
   const on = settings?.autoBackup !== false;
 
   useEffect(() => {
-    void backupFolderPath().then(setFolder, () => undefined);
-  }, []);
+    void shell.backupFolderLabel().then(setFolder, () => undefined);
+  }, [shell]);
 
   async function backUpNow() {
     try {
-      const { written } = await runAutoBackup(async () => JSON.stringify(await buildBackupNow(), null, 1), true);
+      const { written } = await shell.runAutoBackup(async () => JSON.stringify(await buildBackupNow(), null, 1), true);
       await markBackedUp();
       setStatus(`Saved ${written}`);
     } catch (e) {
@@ -44,9 +44,11 @@ export default function DesktopBackupSettings() {
       </label>
       <div className="flex flex-wrap gap-2">
         <button type="button" className={secondaryButton} onClick={() => void backUpNow()}>Back up now</button>
-        <button type="button" className={secondaryButton} onClick={() => void openBackupFolder().catch(() => setStatus('That folder does not exist yet. Back up once first.'))}>
-          Open backup folder
-        </button>
+        {shell.openBackupFolder && (
+          <button type="button" className={secondaryButton} onClick={() => void shell.openBackupFolder!().catch(() => setStatus('That folder does not exist yet. Back up once first.'))}>
+            Open backup folder
+          </button>
+        )}
       </div>
       <p role="status" className="min-h-5 text-sm text-slate-500">{status}</p>
     </div>

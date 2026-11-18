@@ -11,17 +11,19 @@ import pkg from './package.json';
 
 // VITE_PREVIEW=1: one self-contained file for the sandboxed preview page (no service worker there).
 const isPreview = !!process.env.VITE_PREVIEW;
+const isNativeMode = (mode: string) => mode === 'desktop' || mode === 'android';
 
 export default defineConfig(({ mode }) => ({
-  // `--mode desktop` builds the Windows app (Tauri): relative paths, #/ addresses, no service worker.
+  // `--mode desktop` (Windows app, Tauri) and `--mode android` (Android app, Capacitor):
+  // relative paths, #/ addresses and no service worker, since the app files are installed locally.
   // A relative base also lets the web build run from any folder, e.g. https://<user>.github.io/<repo>/.
-  base: mode === 'desktop' ? './' : (process.env.VITE_BASE ?? '/'),
+  base: isNativeMode(mode) ? './' : (process.env.VITE_BASE ?? '/'),
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
-      disable: isPreview || mode === 'desktop',
+      disable: isPreview || isNativeMode(mode),
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {

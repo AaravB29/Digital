@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { copyText, downloadText, DOWNLOADS_BLOCKED } from '../lib/download';
-import { isDesktop } from '../desktop/platform';
-import { saveWithDialog } from '../desktop/files';
+import { getNativeShell } from '../native';
 import { secondaryButton } from './fieldStyles';
 
 interface Props {
@@ -19,10 +18,11 @@ export default function ExportButtons({ label, fileName, type, build, onDone }: 
   const [status, setStatus] = useState<string | null>(null);
 
   async function download() {
-    if (isDesktop()) {
-      // Desktop app: the normal Windows "Save as" dialog.
+    const shell = await getNativeShell();
+    if (shell) {
+      // Windows: the "Save as" dialog. Android: the share sheet.
       try {
-        if ((await saveWithDialog(fileName, await build())) === 'cancelled') return;
+        if ((await shell.saveFile(fileName, await build())) === 'cancelled') return;
       } catch (e) {
         return setStatus(`Could not save: ${e instanceof Error ? e.message : String(e)}`);
       }

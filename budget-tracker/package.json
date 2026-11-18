@@ -1,7 +1,7 @@
 {
   "name": "budget-tracker",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,9 +10,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:desktop": "tsc -b && vite build --mode desktop",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build:android": "tsc -b && vite build --mode android",
+    "cap": "cap"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
     "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/plugin-dialog": "^2.8.4",
     "@tauri-apps/plugin-fs": "^2.7.1",
@@ -26,6 +33,7 @@
     "recharts": "^2.15.4"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.0",
     "@tailwindcss/vite": "^4.3.5",
     "@tauri-apps/cli": "^2.12.4",
     "@types/react": "^18.3.31",

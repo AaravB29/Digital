@@ -19,3 +19,25 @@ export function shouldCheckForUpdate(lastCheckedAt: string | null, now: Date = n
   const last = new Date(lastCheckedAt).getTime();
   return Number.isNaN(last) || now.getTime() - last >= 24 * 60 * 60 * 1000;
 }
+
+export interface ReleaseInfo {
+  tag_name: string;
+  html_url: string;
+  draft?: boolean;
+  prerelease?: boolean;
+}
+
+/**
+ * The newest published release whose tag starts with `prefix` (e.g. "android-v"), so the
+ * Windows and Android apps each only see their own releases.
+ */
+export function latestReleaseFor(releases: ReleaseInfo[], prefix: string): ReleaseInfo | null {
+  let best: ReleaseInfo | null = null;
+  for (const r of releases) {
+    if (r.draft || r.prerelease || !r.tag_name.startsWith(prefix)) continue;
+    const version = r.tag_name.slice(prefix.length);
+    if (!parseVersion(version)) continue;
+    if (!best || isNewerVersion(version, best.tag_name.slice(prefix.length))) best = r;
+  }
+  return best;
+}

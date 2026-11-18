@@ -1,0 +1,91 @@
+# Builds the Android version of budget-tracker/ (Capacitor) and publishes a signed APK as a
+# GitHub Release named android-v<version>. Needs two repository secrets (see budget-tracker/README.md):
+# ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD. Without them it only builds a test APK.
+# A version that is already released is only built, not published again: bump "version" to release.
+name: Budget Tracker - Android app
+
+on:
+  push:
+    branches: [master, claude/new-session-9qelns]
+    paths: ['budget-tracker/**', '.github/workflows/budget-tracker-android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: budget-tracker-android
+  cancel-in-progress: false
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: budget-tracker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: budget-tracker/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:android
+      - run: npx cap sync android
+
+      - name: Signing key
+        id: key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No signing key in the repository secrets yet, so only a test APK is built and nothing is published."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/budget-tracker.keystore"
+          echo "path=$RUNNER_TEMP/budget-tracker.keystore" >> "$GITHUB_OUTPUT"
+          echo "present=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed APK
+        if: steps.key.outputs.present == 'true'
+        working-directory: budget-tracker/android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ steps.key.outputs.path }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Build test APK (no signing key yet)
+        if: steps.key.outputs.present != 'true'
+        working-directory: budget-tracker/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Publish the release
+        if: steps.key.outputs.present == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(node -p "require('./package.json').version")
+          apk="Budget-Tracker-$v.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$apk"
+          if gh release view "android-v$v" > /dev/null 2>&1; then
+            echo "android-v$v is already released; built only."
+          else
+            gh release create "android-v$v" "$apk" --target "$GITHUB_SHA" --latest=false \
+              --title "Budget Tracker v$v for Android" \
+              --notes "**To install:** open this page on your phone and tap **$apk** below. Allow your browser to install unknown apps when asked; if Google Play Protect warns about an unknown app, tap **More details → Install anyway**. Installing a newer version over an older one keeps all your data."
+          fi
+
+      - name: Keep the APK with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: budget-tracker-android-apk
+          path: budget-tracker/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error

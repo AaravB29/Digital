@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Category, MonthKey } from '../db/types';
 import type { ExpenseInput } from '../db/actions';
 import ExpenseForm from './ExpenseForm';
+import { BACK_EVENT } from '../native/useAndroidShell';
 
 interface Props {
   month: MonthKey;
@@ -20,8 +21,17 @@ export default function QuickAdd({ month, categories, locale, defaultCategoryId,
   useEffect(() => {
     if (!sheetOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSheetOpen(false);
+    // Android back button closes the sheet instead of leaving the page.
+    const onBack = (e: Event) => {
+      e.preventDefault();
+      setSheetOpen(false);
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener(BACK_EVENT, onBack);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener(BACK_EVENT, onBack);
+    };
   }, [sheetOpen]);
 
   const form = (autoFocus: boolean, afterAdd?: () => void) => (
