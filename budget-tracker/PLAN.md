@@ -235,6 +235,20 @@ Wrap the existing app with **Tauri 2** so it installs as a normal Windows progra
 - The website and phone install keep working exactly as now.
 - **Done when:** I can download the installer from GitHub Releases, install it on Windows, open it with no browser, my data survives clearing browser data, and a backup file appears in Documents.
 
+### Phase 8 — Android app (added on request)
+A real Android app (`.apk`) downloaded from GitHub Releases and installed on the phone, not via a browser.
+- Wrap the same React code with **Capacitor** (Android only). Capacitor is the most established way to ship a web app as an Android app and builds with Android's normal tools (no Rust), so the phone build stays simple and fast. Desktop keeps Tauri.
+- Data lives in the app's own storage, separate from the browser/home-screen version; move data in with Backup → Restore.
+- **Daily automatic backup** to the phone's `Documents/Budget Tracker Backups` (visible in the Files app, kept even if the app is uninstalled), newest 30 kept — reusing the tested rules from Phase 7. Switch in Settings.
+- **Export CSV / backup** through Android's share sheet (save to Files, Google Drive, email, …). Restore uses the normal file picker.
+- Android back button moves back through the app's screens; status bar matches the app colours; works offline.
+- **Update notice** like the desktop app; each platform only looks at its own releases (`android-v…` vs `desktop-v…`), fixing the desktop check so an Android release is never mistaken for a desktop one.
+- **Build:** a GitHub Actions workflow builds a signed release APK and attaches it to an `android-v<version>` release.
+- **Signing key (one-time setup by me + you):** Android only lets an update install over the old app if both are signed with the same key. I generate the key; you add it to GitHub as repository secrets, so every future build is signed the same way and updates keep your data.
+- Not on the Play Store (that needs a paid developer account and review); install by allowing "Install unknown apps" for your browser once.
+- New dependencies: `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, `@capacitor/filesystem`, `@capacitor/share`, `@capacitor/app`, `@capacitor/status-bar`.
+- **Done when:** I can download the APK from GitHub on my phone, install it, use it offline, see a daily backup in Files → Documents, and install a newer version over it without losing data.
+
 ---
 
 ## 8. Instructions to Claude Code (put these in CLAUDE.md)
